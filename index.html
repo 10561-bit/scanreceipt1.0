@@ -428,7 +428,7 @@
 
         <label class="setting-label" data-i18n="modelLbl">AI Model</label>
         <select id="modelSelect" class="setting-input">
-          <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended / Fast)</option>
+          <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended / Fast)</option>
           <option value="gemini-2.0-flash">gemini-2.0-flash (Fallback)</option>
         </select>
 
@@ -575,7 +575,7 @@
 
     function init() {
       document.getElementById('apiKeyInput').value = localStorage.getItem('snapbook_api_key') || '';
-      document.getElementById('modelSelect').value = localStorage.getItem('snapbook_model') || 'gemini-2.5-flash';
+      document.getElementById('modelSelect').value = localStorage.getItem('snapbook_model') || 'gemini-3.8-flash';
       applyLang();
       checkApiBanner();
       renderCategories();
@@ -675,7 +675,7 @@
     }
 
     async function analyzeWithGemini(base64Img, apiKey) {
-      const model = localStorage.getItem('snapbook_model') || 'gemini-2.5-flash';
+      const model = localStorage.getItem('snapbook_model') || 'gemini-3.8-flash';
       // 使用 x-goog-api-key 请求头传递密钥，同时兼容新版 AQ. 密钥与旧版 AIzaSy 密钥
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
