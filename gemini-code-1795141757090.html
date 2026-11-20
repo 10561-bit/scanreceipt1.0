@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SnapBook" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <title>SnapBook — AI Receipt & Expense Tracker</title>
+  <style>
+    :root {
+      --primary: #5B46E8;
+      --primary-dark: #4834D4;
+      --primary-soft: #EFEBFD;
+      --bg: #F4F2FA;
+      --card: #FFFFFF;
+      --text: #1A1A2E;
+      --text-muted: #6B7280;
+      --border: #E5E7EB;
+      --danger: #EF4444;
+      --success: #10B981;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow: 0 4px 20px rgba(91, 70, 232, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom));
+      overscroll-behavior-y: none;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon {
+      width: 36px; height: 36px; border-radius: 10px; background: var(--primary);
+      color: #fff; font-weight: 800; font-size: 20px; display: flex; align-items: center; justify-content: center;
+    }
+    .brand-text h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.1; }
+    .brand-text span { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; }
+    .beta-pill {
+      font-size: 10px; font-weight: 700; color: var(--primary); background: var(--primary-soft);
+      padding: 3px 8px; border-radius: 999px; margin-left: 4px;
+    }
+    .lang-btn {
+      border: 1.5px solid var(--primary); background: #fff; color: var(--primary);
+      font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 10px; cursor: pointer;
+    }
+
+    .container { max-width: 480px; margin: 0 auto; padding: 20px 16px; }
+    .view { display: none; }
+    .view.active { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .hero-title { text-align: center; font-size: 24px; font-weight: 800; color: var(--primary); margin: 18px 0 24px; }
+
+    .btn-primary {
+      width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 14px; padding: 16px;
+      font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px;
+      cursor: pointer; box-shadow: 0 6px 16px rgba(91, 70, 232, 0.28); transition: transform 0.12s ease, background 0.12s;
+    }
+    .btn-primary:active { transform: scale(0.98); background: var(--primary-dark); }
+
+    .btn-outline {
+      width: 100%; background: #fff; color: var(--primary); border: 1.5px solid var(--primary); border-radius: 14px;
+      padding: 14px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer; margin-top: 12px; transition: transform 0.12s ease, background 0.12s;
+    }
+    .btn-outline:active { transform: scale(0.98); background: var(--primary-soft); }
+
+    .btn-soft {
+      width: 100%; background: var(--primary-soft); color: var(--primary); border: 1.5px dashed var(--primary);
+      border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 700; display: flex; align-items: center;
+      justify-content: center; gap: 8px; cursor: pointer; margin-top: 12px;
+    }
+    .btn-soft:active { transform: scale(0.98); }
+
+    .support-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 22px; }
+    .support-tag {
+      font-size: 11px; font-weight: 600; color: var(--text-muted); background: #fff;
+      border: 1px solid var(--border); padding: 5px 10px; border-radius: 999px;
+    }
+    .privacy-note { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 14px; }
+
+    .api-banner {
+      background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 12px 14px; border-radius: 12px;
+      font-size: 13px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .api-banner button {
+      background: #D97706; color: #fff; border: none; padding: 6px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+
+    .loading-box {
+      display: none; text-align: center; padding: 40px 20px; background: #fff;
+      border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-top: 10px;
+    }
+    .loading-box.show { display: block; }
+    .spinner {
+      width: 44px; height: 44px; border: 4px solid var(--primary-soft); border-top-color: var(--primary);
+      border-radius: 50%; margin: 0 auto 16px; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .card {
+      background: var(--card); border-radius: var(--radius-lg); padding: 18px;
+      box-shadow: var(--shadow); margin-bottom: 16px; border: 1px solid rgba(91, 70, 232, 0.08);
+    }
+    .doc-badge {
+      display: inline-block; font-size: 11px; font-weight: 700; color: var(--primary);
+      background: var(--primary-soft); padding: 4px 10px; border-radius: 6px; margin-bottom: 10px;
+    }
+    .field-row {
+      display: flex; align-items: center; justify-content: space-between; padding: 10px 0;
+      border-bottom: 1px solid #F3F4F6; gap: 10px;
+    }
+    .field-row:last-child { border-bottom: none; }
+    .field-label { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+    .field-input {
+      border: none; background: transparent; text-align: right; font-size: 14px; font-weight: 600;
+      color: var(--text); width: 100%; font-family: inherit; outline: none; padding: 4px 6px; border-radius: 6px;
+    }
+    .field-input:focus { background: var(--primary-soft); }
+    .merchant-input {
+      width: 100%; border: none; font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 10px;
+      font-family: inherit; outline: none; padding: 4px 0; border-bottom: 1.5px dashed transparent;
+    }
+    .merchant-input:focus { border-bottom-color: var(--primary); }
+
+    .total-row { padding: 12px 0; border-top: 1.5px solid var(--border); border-bottom: 1.5px solid var(--border); margin: 6px 0; }
+    .total-row .field-label { font-size: 16px; font-weight: 800; color: var(--text); }
+    .total-row .field-input { font-size: 18px; font-weight: 800; color: var(--primary); }
+
+    .items-section { margin: 10px 0; padding: 8px 0; border-top: 1px solid #F3F4F6; }
+    .items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .items-header span { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .add-item-btn {
+      background: var(--primary-soft); color: var(--primary); border: none; font-size: 11px;
+      font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer;
+    }
+    .item-row {
+      display: grid; grid-template-columns: 1fr 48px 78px 24px; gap: 6px; align-items: center;
+      padding: 5px 0; border-bottom: 1px dashed #EFEFEF;
+    }
+    .item-row input {
+      border: 1px solid transparent; background: #FAFAFC; padding: 5px 6px; border-radius: 6px;
+      font-size: 13px; font-family: inherit; width: 100%;
+    }
+    .item-row input:focus { outline: none; border-color: var(--primary); background: #fff; }
+    .item-del { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; }
+
+    .pay-pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+    .pay-pill {
+      font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 8px;
+      border: 1px solid var(--border); background: #fff; color: var(--text-muted); cursor: pointer;
+    }
+    .pay-pill.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .suggested-box {
+      background: #fff; border: 1.5px solid var(--primary); border-radius: var(--radius-lg);
+      padding: 16px; margin-bottom: 16px;
+    }
+    .suggested-label { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+    .suggested-cat { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+    .suggested-reason { font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+
+    .cat-title { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; }
+    .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .cat-btn {
+      background: #fff; border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 10px;
+      text-align: left; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; transition: all 0.15s; line-height: 1.25;
+    }
+    .cat-btn.selected { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 700; }
+
+    .action-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .action-pair .btn-outline { margin-top: 0; }
+
+    .summary-card {
+      background: linear-gradient(135deg, var(--primary), #7C3AED); color: #fff; border-radius: var(--radius-lg);
+      padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(91, 70, 232, 0.25);
+    }
+    .summary-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .summary-label { font-size: 12px; opacity: 0.85; }
+    .summary-amount { font-size: 28px; font-weight: 800; margin-top: 4px; }
+    .export-btn {
+      background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.35);
+      padding: 7px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+
+    .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      white-space: nowrap; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: #fff; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer;
+    }
+    .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .record-card {
+      background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow);
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .record-left h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .record-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--text-muted); align-items: center; }
+    .tag-mini { background: var(--primary-soft); color: var(--primary); padding: 2px 7px; border-radius: 6px; font-weight: 700; }
+    .tag-pay { background: #F3F4F6; color: #374151; padding: 2px 7px; border-radius: 6px; font-weight: 600; }
+    .record-right { text-align: right; }
+    .record-amt { font-size: 16px; font-weight: 800; color: var(--text); white-space: nowrap; }
+    .record-actions { margin-top: 6px; display: flex; gap: 8px; justify-content: flex-end; }
+    .mini-btn { background: none; border: none; font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 2px 4px; }
+    .mini-btn.del { color: var(--danger); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+
+    .setting-label { font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; }
+    .setting-input {
+      width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 14px; margin-bottom: 10px; font-family: inherit;
+    }
+    .setting-input:focus { outline: none; border-color: var(--primary); }
+    .setting-help { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
+    .setting-help a { color: var(--primary); font-weight: 600; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(3, 1fr); padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); z-index: 60;
+    }
+    .nav-item {
+      background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; position: relative;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-badge {
+      background: var(--primary); color: #fff; font-size: 10px; font-weight: 800;
+      padding: 1px 6px; border-radius: 999px; margin-left: 3px;
+    }
+
+    .toast {
+      position: fixed; top: 72px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      background: #1A1A2E; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 13px;
+      font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.25s ease; z-index: 100; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">S</div>
+      <div class="brand-text">
+        <h1>SNAPBOOK <span class="beta-pill">PERSONAL</span></h1>
+        <span>AI RECEIPT & EXPENSE</span>
+      </div>
+    </div>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
+  </header>
+
+  <div class="toast" id="toast">Saved!</div>
+
+  <div class="container">
+
+    <!-- VIEW 1: SCAN HOME -->
+    <div id="view-scan" class="view active">
+      <div id="apiWarning" class="api-banner hidden">
+        <span data-i18n="apiWarn">Set your free Gemini API Key first to enable AI scan.</span>
+        <button onclick="switchTab('me')" data-i18n="setupBtn">Setup</button>
+      </div>
+
+      <div id="scanHomeBox">
+        <h2 class="hero-title" data-i18n="heroTitle">Keep your books tidy</h2>
+
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)" />
+        <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
+
+        <button class="btn-primary" onclick="document.getElementById('cameraInput').click()">
+          <span>📷</span> <span data-i18n="snapBtn">Snap a receipt</span>
+        </button>
+
+        <button class="btn-outline" onclick="document.getElementById('galleryInput').click()">
+          <span>🖼️</span> <span data-i18n="galleryBtn">Choose from photos (TnG / Bank / Receipt)</span>
+        </button>
+
+        <button class="btn-soft" onclick="openManualEntry()">
+          <span>✍️</span> <span data-i18n="manualBtn">Manual Entry (Cash / No Receipt)</span>
+        </button>
+
+        <div class="support-tags">
+          <span class="support-tag">🧾 Paper Receipts</span>
+          <span class="support-tag">💙 TnG eWallet</span>
+          <span class="support-tag">🏦 Bank / DuitNow</span>
+          <span class="support-tag">💵 Cash / Manual</span>
+        </div>
+
+        <p class="privacy-note" data-i18n="privacyNote">Photos are only read by AI, never stored on any server.</p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingBox" class="loading-box">
+        <div class="spinner"></div>
+        <h3 style="margin-bottom:6px;" data-i18n="analyzingTitle">Reading receipt with AI...</h3>
+        <p style="font-size:13px; color:var(--text-muted);" data-i18n="analyzingDesc">Extracting merchant, items, SST & suggesting category</p>
+      </div>
+
+      <!-- Review / Manual Form -->
+      <div id="reviewBox" class="hidden">
+        <div class="card">
+          <span class="doc-badge" id="revDocType">Receipt</span>
+          <input type="text" id="revMerchant" class="merchant-input" placeholder="Merchant / Payee Name" />
+
+          <div class="field-row">
+            <span class="field-label" data-i18n="dateLbl">Date</span>
+            <input type="date" id="revDate" class="field-input" />
+          </div>
+          <div class="field-row">
+            <span class="field-label" data-i18n="refLbl">Receipt / Ref no.</span>
+            <input type="text" id="revRef" class="field-input" placeholder="-" />
+          </div>
+
+          <div class="items-section">
+            <div class="items-header">
+              <span data-i18n="itemsLbl">Items</span>
+              <button type="button" class="add-item-btn" onclick="addItemRow()" data-i18n="addItemBtn">+ Add item</button>
+            </div>
+            <div id="itemsContainer"></div>
+          </div>
+
+          <div class="field-row">
+            <span class="field-label" data-i18n="subtotalLbl">Subtotal (RM)</span>
+            <input type="number" step="0.01" id="revSubtotal" class="field-input" placeholder="0.00" />
+          </div>
+          <div class="field-row">
+            <span class="field-label">SST (RM)</span>
+            <input type="number" step="0.01" id="revSst" class="field-input" placeholder="0.00" />
+          </div>
+          <div class="field-row">
+            <span class="field-label" data-i18n="svcLbl">Service charge (RM)</span>
+            <input type="number" step="0.01" id="revSvc" class="field-input" placeholder="0.00" />
+          </div>
+
+          <div class="field-row total-row">
+            <span class="field-label" data-i18n="totalLbl">Total (RM)</span>
+            <input type="number" step="0.01" id="revTotal" class="field-input" placeholder="0.00" />
+          </div>
+
+          <div class="field-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+            <span class="field-label" data-i18n="paymentLbl">Payment Method</span>
+            <div class="pay-pills" id="paymentPills">
+              <button type="button" class="pay-pill" data-pay="Cash" onclick="selectPayment('Cash')">💵 Cash</button>
+              <button type="button" class="pay-pill" data-pay="TnG eWallet" onclick="selectPayment('TnG eWallet')">💙 TnG</button>
+              <button type="button" class="pay-pill" data-pay="Bank Transfer" onclick="selectPayment('Bank Transfer')">🏦 Bank / DuitNow</button>
+              <button type="button" class="pay-pill" data-pay="Card" onclick="selectPayment('Card')">💳 Card</button>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <span class="field-label" data-i18n="notesLbl">Notes</span>
+            <input type="text" id="revNotes" class="field-input" placeholder="Optional note..." />
+          </div>
+        </div>
+
+        <div id="aiSuggestionBox" class="suggested-box hidden">
+          <div class="suggested-label" data-i18n="suggestedLbl">Suggested account</div>
+          <div class="suggested-cat" id="aiSuggestedCat">Entertainment</div>
+          <div class="suggested-reason" id="aiSuggestedReason"></div>
+        </div>
+
+        <div class="cat-title" data-i18n="chooseCatLbl">Choose an account / category</div>
+        <div class="cat-grid" id="catGrid"></div>
+
+        <div class="action-pair">
+          <button class="btn-primary" onclick="saveCurrentRecord()" data-i18n="confirmBtn">Confirm & Save</button>
+          <button class="btn-outline" onclick="resetScanView()" data-i18n="cancelBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: MY RECORDS -->
+    <div id="view-records" class="view">
+      <div class="summary-card">
+        <div class="summary-top">
+          <div>
+            <div class="summary-label" data-i18n="totalSpentLbl">Total Recorded</div>
+            <div class="summary-amount" id="totalSpentDisplay">RM 0.00</div>
+          </div>
+          <button class="export-btn" onclick="exportCSV()" data-i18n="exportCsvBtn">📥 Export Excel</button>
+        </div>
+      </div>
+
+      <div class="filter-bar" id="paymentFilterBar">
+        <button class="filter-chip active" onclick="setFilter('ALL', this)" data-i18n="filterAll">All</button>
+        <button class="filter-chip" onclick="setFilter('Cash', this)">💵 Cash</button>
+        <button class="filter-chip" onclick="setFilter('TnG eWallet', this)">💙 TnG</button>
+        <button class="filter-chip" onclick="setFilter('Bank Transfer', this)">🏦 Bank</button>
+        <button class="filter-chip" onclick="setFilter('Card', this)">💳 Card</button>
+      </div>
+
+      <div id="recordsList"></div>
+    </div>
+
+    <!-- VIEW 3: ME / SETTINGS -->
+    <div id="view-me" class="view">
+      <div class="card">
+        <label class="setting-label" data-i18n="apiKeyLbl">Google Gemini API Key (Free)</label>
+        <input type="password" id="apiKeyInput" class="setting-input" placeholder="AQ.Ab8RN6... or AIzaSy..." />
+        <p class="setting-help" data-i18n="apiHelp">
+          Your key is stored <strong>only on your phone</strong>. Get a free key at 
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+        </p>
+
+        <label class="setting-label" data-i18n="modelLbl">AI Model</label>
+        <select id="modelSelect" class="setting-input">
+          <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended / Fast)</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash (Fallback)</option>
+        </select>
+
+        <button class="btn-primary" onclick="saveSettings()" data-i18n="saveSettingsBtn">Save Settings</button>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px; margin-bottom:8px;" data-i18n="pwaTitle">📱 Add to iPhone Home Screen</h3>
+        <p class="setting-help" style="margin-bottom:0;" data-i18n="pwaDesc">
+          Open this link in <strong>Safari</strong> → tap the <strong>Share</strong> icon (bottom center) → tap <strong>"Add to Home Screen"</strong>. It will work like a native app!
+        </p>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px; margin-bottom:10px;" data-i18n="dataMgmtTitle">Data Management</h3>
+        <button class="btn-outline" style="margin-top:0;" onclick="exportCSV()" data-i18n="exportCsvBtn">📥 Export Excel (CSV)</button>
+        <button class="btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="clearAllRecords()" data-i18n="clearAllBtn">🗑️ Clear All Records</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-scan" onclick="switchTab('scan')">
+      <span class="nav-icon">📷</span>
+      <span data-i18n="tabScan">Scan</span>
+    </button>
+    <button class="nav-item" id="nav-records" onclick="switchTab('records')">
+      <span class="nav-icon">🧾</span>
+      <span><span data-i18n="tabRecords">My records</span><span class="nav-badge" id="recordCountBadge">0</span></span>
+    </button>
+    <button class="nav-item" id="nav-me" onclick="switchTab('me')">
+      <span class="nav-icon">👤</span>
+      <span data-i18n="tabMe">Me</span>
+    </button>
+  </nav>
+
+  <script>
+    const CATEGORIES = [
+      { id: "Entertainment", en: "Entertainment / Dining", zh: "餐饮 / 应酬 (Entertainment)" },
+      { id: "Staff Welfare", en: "Staff Welfare", zh: "员工福利 (Staff Welfare)" },
+      { id: "Office Supplies & Stationery", en: "Office Supplies & Stationery", zh: "办公文具 (Office Supplies)" },
+      { id: "Transport", en: "Transport (Grab / MRT)", zh: "交通出行 (Transport)" },
+      { id: "Fuel, Toll & Parking", en: "Fuel, Toll & Parking", zh: "油费 / 过路 / 停车" },
+      { id: "Utilities", en: "Utilities (Water / Elec)", zh: "水电费 (Utilities)" },
+      { id: "Telco & Internet", en: "Telco & Internet", zh: "电话与网络 (Telco)" },
+      { id: "Repairs & Maintenance", en: "Repairs & Maintenance", zh: "维修保养 (Repairs)" },
+      { id: "Postage & Courier", en: "Postage & Courier", zh: "邮寄快递 (Courier)" },
+      { id: "Software & Subscriptions", en: "Software & Subscriptions", zh: "软件订阅 (Subscriptions)" },
+      { id: "Advertising & Marketing", en: "Advertising & Marketing", zh: "广告行销 (Marketing)" },
+      { id: "Purchases (stock)", en: "Purchases (stock)", zh: "进货 / 采购 (Purchases)" },
+      { id: "Personal (not business)", en: "Personal (not business)", zh: "个人消费 (Personal)" },
+      { id: "Other", en: "Other", zh: "其他 (Other)" }
+    ];
+
+    const I18N = {
+      en: {
+        langToggle: "中文",
+        apiWarn: "Set your free Gemini API Key first to enable AI scan.",
+        setupBtn: "Setup",
+        heroTitle: "Keep your books tidy",
+        snapBtn: "Snap a receipt",
+        galleryBtn: "Choose from photos (TnG / Bank / Receipt)",
+        manualBtn: "Manual Entry (Cash / No Receipt)",
+        privacyNote: "Photos are only read by AI, never stored on any server.",
+        analyzingTitle: "Reading receipt with AI...",
+        analyzingDesc: "Extracting merchant, items, SST & suggesting category",
+        dateLbl: "Date",
+        refLbl: "Receipt / Ref no.",
+        itemsLbl: "Items",
+        addItemBtn: "+ Add item",
+        subtotalLbl: "Subtotal (RM)",
+        svcLbl: "Service charge (RM)",
+        totalLbl: "Total (RM)",
+        paymentLbl: "Payment Method",
+        notesLbl: "Notes",
+        suggestedLbl: "Suggested account",
+        chooseCatLbl: "Choose an account / category",
+        confirmBtn: "Confirm & Save",
+        cancelBtn: "Cancel",
+        totalSpentLbl: "Total Recorded",
+        exportCsvBtn: "📥 Export Excel",
+        filterAll: "All",
+        apiKeyLbl: "Google Gemini API Key (Free)",
+        modelLbl: "AI Model",
+        saveSettingsBtn: "Save Settings",
+        pwaTitle: "📱 Add to iPhone Home Screen",
+        pwaDesc: 'Open this link in <strong>Safari</strong> → tap the <strong>Share</strong> icon (bottom center) → tap <strong>"Add to Home Screen"</strong>. It will work like a native app!',
+        dataMgmtTitle: "Data Management",
+        clearAllBtn: "🗑️ Clear All Records",
+        tabScan: "Scan",
+        tabRecords: "My records",
+        tabMe: "Me",
+        emptyRecords: "No records yet. Snap a receipt or add a cash entry!"
+      },
+      zh: {
+        langToggle: "EN",
+        apiWarn: "请先填入你的免费 Gemini API Key 以开启 AI 扫单功能。",
+        setupBtn: "去设置",
+        heroTitle: "轻松扫单 · 账目清晰",
+        snapBtn: "拍照扫描收据",
+        galleryBtn: "从相册选择 (TnG / 银行转账 / 收据)",
+        manualBtn: "手动记账 (给现钱 / 没有收据)",
+        privacyNote: "照片仅用于 AI 识别，不会上传或储存在任何服务器。",
+        analyzingTitle: "AI 正在读取单据...",
+        analyzingDesc: "正在识别商家、明细、SST 及自动推荐分类",
+        dateLbl: "日期",
+        refLbl: "单号 / 参考号",
+        itemsLbl: "消费明细",
+        addItemBtn: "+ 加一项",
+        subtotalLbl: "小计 Subtotal (RM)",
+        svcLbl: "服务费 Service Charge (RM)",
+        totalLbl: "总计 Total (RM)",
+        paymentLbl: "付款方式",
+        notesLbl: "备注",
+        suggestedLbl: "AI 推荐分类",
+        chooseCatLbl: "选择记账分类",
+        confirmBtn: "确认并保存",
+        cancelBtn: "取消",
+        totalSpentLbl: "累计记录金额",
+        exportCsvBtn: "📥 导出 Excel",
+        filterAll: "全部",
+        apiKeyLbl: "Google Gemini API Key (免费获取)",
+        modelLbl: "AI 模型",
+        saveSettingsBtn: "保存设置",
+        pwaTitle: "📱 添加到手机主屏幕 (像 App 一样使用)",
+        pwaDesc: '用 iPhone <strong>Safari</strong> 打开此网址 → 点击底部中间的 <strong>分享图标</strong> → 选择 <strong>“添加到主屏幕”</strong> 即可！',
+        dataMgmtTitle: "数据管理",
+        clearAllBtn: "🗑️ 清空所有记录",
+        tabScan: "扫单",
+        tabRecords: "我的记录",
+        tabMe: "设置",
+        emptyRecords: "还没有记录，快去扫一张单据或手动记一笔吧！"
+      }
+    };
+
+    let currentLang = localStorage.getItem('snapbook_lang') || 'en';
+    let records = JSON.parse(localStorage.getItem('snapbook_records') || '[]');
+    let selectedCategory = 'Entertainment';
+    let selectedPayment = 'Cash';
+    let currentFilter = 'ALL';
+    let editingRecordId = null;
+
+    function init() {
+      document.getElementById('apiKeyInput').value = localStorage.getItem('snapbook_api_key') || '';
+      document.getElementById('modelSelect').value = localStorage.getItem('snapbook_model') || 'gemini-2.5-flash';
+      applyLang();
+      checkApiBanner();
+      renderCategories();
+      renderRecords();
+      updateBadge();
+    }
+
+    function checkApiBanner() {
+      const hasKey = !!(localStorage.getItem('snapbook_api_key') || '').trim();
+      document.getElementById('apiWarning').classList.toggle('hidden', hasKey);
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('snapbook_lang', currentLang);
+      applyLang();
+      renderCategories();
+      renderRecords();
+    }
+
+    function applyLang() {
+      const dict = I18N[currentLang];
+      document.getElementById('langBtn').textContent = dict.langToggle;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerHTML = dict[key];
+      });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('view-' + tab).classList.add('active');
+      document.getElementById('nav-' + tab).classList.add('active');
+      if (tab === 'records') renderRecords();
+    }
+
+    function compressImage(file, maxWidth = 1280) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > maxWidth) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+            resolve(dataUrl.split(',')[1]);
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFileSelect(event) {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+
+      const apiKey = (localStorage.getItem('snapbook_api_key') || '').trim();
+      if (!apiKey) {
+        showToast(currentLang === 'zh' ? '请先在设置中填入 Gemini API Key' : 'Please set Gemini API Key in Me tab first');
+        switchTab('me');
+        return;
+      }
+
+      document.getElementById('scanHomeBox').classList.add('hidden');
+      document.getElementById('reviewBox').classList.add('hidden');
+      document.getElementById('loadingBox').classList.add('show');
+
+      try {
+        const base64Data = await compressImage(file);
+        const result = await analyzeWithGemini(base64Data, apiKey);
+        populateReviewForm(result, true);
+      } catch (err) {
+        console.error(err);
+        alert((currentLang === 'zh' ? 'AI 识别失败：' : 'AI Scan failed: ') + err.message);
+        resetScanView();
+      }
+    }
+
+    async function analyzeWithGemini(base64Img, apiKey) {
+      const model = localStorage.getItem('snapbook_model') || 'gemini-2.5-flash';
+      // 使用 x-goog-api-key 请求头传递密钥，同时兼容新版 AQ. 密钥与旧版 AIzaSy 密钥
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+      const catList = CATEGORIES.map(c => c.id).join(', ');
+      const reasonLang = currentLang === 'zh' ? 'Simplified Chinese' : 'English';
+
+      const prompt = `You are a Malaysian accounting & receipt extraction assistant.
+Analyze this image. It could be:
+1. A physical paper receipt (e.g., Kopitiam, Mamak, Restaurant, Petrol station, Supermarket, Parking).
+2. A Touch 'n Go (TnG) eWallet transaction screenshot (DuitNow QR, Toll/RFID, Parking, Transfer, Reload).
+3. A Malaysian Bank Transfer / DuitNow receipt screenshot (Maybank MAE, CIMB, Public Bank, AmBank, RHB, HLB, GXBank, Boost Bank, etc.).
+
+Extract the data and return ONLY a valid JSON object (no markdown, no extra text) with this exact schema:
+{
+  "doc_type": "Receipt" | "TnG eWallet" | "Bank Transfer",
+  "merchant": "Store name or recipient name",
+  "date": "YYYY-MM-DD (if year missing, use 2026; if unreadable, use today's date)",
+  "receipt_no": "Receipt number, DuitNow ref, or Transaction ID (or empty string)",
+  "items": [
+    { "name": "Item or transfer description", "qty": 1, "amount": 0.00 }
+  ],
+  "subtotal": 0.00,
+  "sst": 0.00,
+  "service_charge": 0.00,
+  "total": 0.00,
+  "payment_method": "Cash" | "TnG eWallet" | "Bank Transfer" | "Card",
+  "suggested_category": "Must be EXACTLY one of: ${catList}",
+  "reason": "1 short sentence in ${reasonLang} explaining why this category fits."
+}
+
+Rules:
+- For TnG eWallet screenshots, set doc_type="TnG eWallet" and payment_method="TnG eWallet".
+- For Bank/DuitNow screenshots, set doc_type="Bank Transfer" and payment_method="Bank Transfer".
+- If it is a TnG or Bank transfer with no itemized list, put 1 item using the transfer detail/recipient reference and the total amount.
+- All numeric values must be numbers (not strings with RM).`;
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: "image/jpeg", data: base64Img } }
+            ]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: "application/json"
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error?.message || `HTTP ${res.status}`);
+      }
+
+      let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      return JSON.parse(rawText);
+    }
+
+    function todayISO() {
+      const d = new Date();
+      const offset = d.getTimezoneOffset() * 60000;
+      return new Date(d - offset).toISOString().slice(0, 10);
+    }
+
+    function openManualEntry() {
+      editingRecordId = null;
+      const blank = {
+        doc_type: "Manual / Cash",
+        merchant: "",
+        date: todayISO(),
+        receipt_no: "",
+        items: [],
+        subtotal: "",
+        sst: 0,
+        service_charge: 0,
+        total: "",
+        payment_method: "Cash",
+        suggested_category: "Personal (not business)",
+        reason: "",
+        notes: ""
+      };
+      populateReviewForm(blank, false);
+      setTimeout(() => document.getElementById('revMerchant').focus(), 100);
+    }
+
+    function populateReviewForm(data, showAiBox) {
+      document.getElementById('loadingBox').classList.remove('show');
+      document.getElementById('scanHomeBox').classList.add('hidden');
+      document.getElementById('reviewBox').classList.remove('hidden');
+
+      document.getElementById('revDocType').textContent = data.doc_type || 'Receipt';
+      document.getElementById('revMerchant').value = data.merchant || '';
+      document.getElementById('revDate').value = data.date || todayISO();
+      document.getElementById('revRef').value = data.receipt_no || '';
+      document.getElementById('revSubtotal').value = data.subtotal !== "" && data.subtotal != null ? Number(data.subtotal).toFixed(2) : '';
+      document.getElementById('revSst').value = data.sst ? Number(data.sst).toFixed(2) : '';
+      document.getElementById('revSvc').value = data.service_charge ? Number(data.service_charge).toFixed(2) : '';
+      document.getElementById('revTotal').value = data.total !== "" && data.total != null ? Number(data.total).toFixed(2) : '';
+      document.getElementById('revNotes').value = data.notes || '';
+
+      const container = document.getElementById('itemsContainer');
+      container.innerHTML = '';
+      if (Array.isArray(data.items) && data.items.length > 0) {
+        data.items.forEach(it => addItemRow(it.name, it.qty || 1, it.amount));
+      }
+
+      selectPayment(data.payment_method || 'Cash');
+
+      const validCat = CATEGORIES.some(c => c.id === data.suggested_category) ? data.suggested_category : 'Other';
+      selectCategory(validCat);
+
+      const aiBox = document.getElementById('aiSuggestionBox');
+      if (showAiBox && data.reason) {
+        const catObj = CATEGORIES.find(c => c.id === validCat);
+        document.getElementById('aiSuggestedCat').textContent = currentLang === 'zh' ? catObj.zh : catObj.en;
+        document.getElementById('aiSuggestedReason').textContent = data.reason;
+        aiBox.classList.remove('hidden');
+      } else {
+        aiBox.classList.add('hidden');
+      }
+    }
+
+    function addItemRow(name = '', qty = 1, amount = '') {
+      const container = document.getElementById('itemsContainer');
+      const div = document.createElement('div');
+      div.className = 'item-row';
+      div.innerHTML = `
+        <input type="text" class="it-name" placeholder="Item" value="${escapeHtml(name)}" />
+        <input type="number" class="it-qty" placeholder="Qty" value="${qty}" min="1" />
+        <input type="number" step="0.01" class="it-amt" placeholder="RM" value="${amount !== '' && amount != null ? Number(amount).toFixed(2) : ''}" />
+        <button type="button" class="item-del" onclick="this.parentElement.remove()">×</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function selectPayment(method) {
+      selectedPayment = method;
+      document.querySelectorAll('#paymentPills .pay-pill').forEach(btn => {
+        btn.classList.toggle('selected', btn.getAttribute('data-pay') === method);
+      });
+    }
+
+    function renderCategories() {
+      const grid = document.getElementById('catGrid');
+      grid.innerHTML = '';
+      CATEGORIES.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cat-btn' + (selectedCategory === cat.id ? ' selected' : '');
+        btn.textContent = currentLang === 'zh' ? cat.zh : cat.en;
+        btn.onclick = () => selectCategory(cat.id);
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectCategory(catId) {
+      selectedCategory = catId;
+      renderCategories();
+    }
+
+    function resetScanView() {
+      editingRecordId = null;
+      document.getElementById('loadingBox').classList.remove('show');
+      document.getElementById('reviewBox').classList.add('hidden');
+      document.getElementById('scanHomeBox').classList.remove('hidden');
+    }
+
+    function saveCurrentRecord() {
+      const merchant = document.getElementById('revMerchant').value.trim();
+      const total = parseFloat(document.getElementById('revTotal').value);
+
+      if (!merchant) {
+        alert(currentLang === 'zh' ? '请输入商家或收款人名称' : 'Please enter merchant or payee name');
+        return;
+      }
+      if (isNaN(total) || total <= 0) {
+        alert(currentLang === 'zh' ? '请输入有效金额' : 'Please enter a valid total amount');
+        return;
+      }
+
+      const items = [];
+      document.querySelectorAll('#itemsContainer .item-row').forEach(row => {
+        const n = row.querySelector('.it-name').value.trim();
+        const q = parseFloat(row.querySelector('.it-qty').value) || 1;
+        const a = parseFloat(row.querySelector('.it-amt').value) || 0;
+        if (n) items.push({ name: n, qty: q, amount: a });
+      });
+
+      const rec = {
+        id: editingRecordId || Date.now().toString(),
+        doc_type: document.getElementById('revDocType').textContent,
+        merchant,
+        date: document.getElementById('revDate').value || todayISO(),
+        receipt_no: document.getElementById('revRef').value.trim(),
+        items,
+        subtotal: parseFloat(document.getElementById('revSubtotal').value) || total,
+        sst: parseFloat(document.getElementById('revSst').value) || 0,
+        service_charge: parseFloat(document.getElementById('revSvc').value) || 0,
+        total,
+        payment_method: selectedPayment,
+        category: selectedCategory,
+        notes: document.getElementById('revNotes').value.trim()
+      };
+
+      if (editingRecordId) {
+        const idx = records.findIndex(r => r.id === editingRecordId);
+        if (idx !== -1) records[idx] = rec;
+      } else {
+        records.unshift(rec);
+      }
+
+      localStorage.setItem('snapbook_records', JSON.stringify(records));
+      updateBadge();
+      resetScanView();
+      showToast(currentLang === 'zh' ? '已保存记录！' : 'Record saved!');
+      switchTab('records');
+    }
+
+    function updateBadge() {
+      document.getElementById('recordCountBadge').textContent = records.length;
+    }
+
+    function setFilter(payType, el) {
+      currentFilter = payType;
+      document.querySelectorAll('#paymentFilterBar .filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderRecords();
+    }
+
+    function renderRecords() {
+      const list = document.getElementById('recordsList');
+      const filtered = currentFilter === 'ALL'
+        ? records
+        : records.filter(r => r.payment_method === currentFilter);
+
+      const sum = filtered.reduce((acc, r) => acc + Number(r.total || 0), 0);
+      document.getElementById('totalSpentDisplay').textContent = `RM ${sum.toFixed(2)}`;
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty-state">${I18N[currentLang].emptyRecords}</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(r => {
+        const catObj = CATEGORIES.find(c => c.id === r.category);
+        const catLabel = catObj ? (currentLang === 'zh' ? catObj.zh : catObj.en) : r.category;
+        return `
+          <div class="record-card">
+            <div class="record-left">
+              <h3>${escapeHtml(r.merchant)}</h3>
+              <div class="record-meta">
+                <span>${r.date}</span>
+                <span class="tag-mini">${escapeHtml(catLabel)}</span>
+                <span class="tag-pay">${escapeHtml(r.payment_method)}</span>
+              </div>
+              ${r.notes ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">📝 ${escapeHtml(r.notes)}</div>` : ''}
+            </div>
+            <div class="record-right">
+              <div class="record-amt">RM ${Number(r.total).toFixed(2)}</div>
+              <div class="record-actions">
+                <button class="mini-btn" onclick="editRecord('${r.id}')">✏️</button>
+                <button class="mini-btn del" onclick="deleteRecord('${r.id}')">🗑️</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function editRecord(id) {
+      const r = records.find(x => x.id === id);
+      if (!r) return;
+      editingRecordId = id;
+      switchTab('scan');
+      populateReviewForm({ ...r, suggested_category: r.category }, false);
+    }
+
+    function deleteRecord(id) {
+      if (!confirm(currentLang === 'zh' ? '确定删除这条记录？' : 'Delete this record?')) return;
+      records = records.filter(r => r.id !== id);
+      localStorage.setItem('snapbook_records', JSON.stringify(records));
+      updateBadge();
+      renderRecords();
+      showToast(currentLang === 'zh' ? '已删除' : 'Deleted');
+    }
+
+    function exportCSV() {
+      if (records.length === 0) {
+        showToast(currentLang === 'zh' ? '没有可导出的记录' : 'No records to export');
+        return;
+      }
+      const headers = ['Date', 'Doc Type', 'Merchant', 'Ref No', 'Category', 'Payment Method', 'Subtotal (RM)', 'SST (RM)', 'Service Charge (RM)', 'Total (RM)', 'Items', 'Notes'];
+      const rows = records.map(r => [
+        r.date,
+        r.doc_type,
+        r.merchant,
+        r.receipt_no,
+        r.category,
+        r.payment_method,
+        Number(r.subtotal || 0).toFixed(2),
+        Number(r.sst || 0).toFixed(2),
+        Number(r.service_charge || 0).toFixed(2),
+        Number(r.total || 0).toFixed(2),
+        (r.items || []).map(i => `${i.name} x${i.qty} (RM${Number(i.amount).toFixed(2)})`).join('; '),
+        r.notes || ''
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SnapBook_Expenses_${todayISO()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function saveSettings() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      const model = document.getElementById('modelSelect').value;
+      localStorage.setItem('snapbook_api_key', key);
+      localStorage.setItem('snapbook_model', model);
+      checkApiBanner();
+      showToast(currentLang === 'zh' ? '设置已保存！' : 'Settings saved!');
+    }
+
+    function clearAllRecords() {
+      if (!confirm(currentLang === 'zh' ? '确定清空所有记账记录？此操作无法撤销。' : 'Clear ALL records? This cannot be undone.')) return;
+      records = [];
+      localStorage.setItem('snapbook_records', '[]');
+      updateBadge();
+      renderRecords();
+      showToast(currentLang === 'zh' ? '已清空' : 'Cleared');
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    init();
+  </script>
+</body>
+</html>
